@@ -1,3 +1,3 @@
 [submodule "server"]
-    path = server
-    url = https://github.com/njuptGD/jsai-competition
+	path = server
+	url = https://github.com/njuptGD/jsai-competition
