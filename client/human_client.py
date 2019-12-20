@@ -38,7 +38,7 @@ class HumanClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = _input_from_choices(all_actions, 'input action: ')
 
-        print('Choose action:', action)
+        print('Choose {}:{}'.format(card_type, action))
 
         return {
             'action': action,
@@ -48,9 +48,10 @@ class HumanClient(BaseClient):
 
     def others_play(self, env):
         print('----------------- others play -------------------')
-        print(env.action_performed)
         env.print_play_area()
-    
+        print('Choose {}: {}'.format(
+            env.action_performed['type'], env.action_performed['action']))
+
     def finish(self, env):
         print('-------------------- finish ---------------------')
         print('finish winner:', env.winner)

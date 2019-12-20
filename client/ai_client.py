@@ -21,7 +21,7 @@ class AIClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = random.choice(all_actions)
 
-        print('Choose action:', action)
+        print('Choose {}:{}'.format(card_type, action))
 
         return {
             'action': action,

@@ -45,18 +45,17 @@ class Env:
         self.mem = PersistentMem()
 
     def see(self, content):
-        if content['type'] not in [0, 1, 2, 5]:
-            raise ValueError('Invalid message type')
+        if content['type'] not in [0, 1, 2, 5, 6]:
+            raise ValueError('Invalid content type: {}'.format(content))
         self.type = content['type']
 
         if self._state == EnvState.PREPARE:
-            if self.type in [1, 2, 5]:
-                self.mem.refresh()
-                self._state = EnvState.PALY
-            else:
+            if self.type == 0:
                 raise ValueError('Should not receive message type 0')
+            self.mem.refresh()
+            self._state = EnvState.PALY
         elif self._state == EnvState.PALY:
-            if self._state == 0:
+            if self.type == 0:
                 self._state = EnvState.PREPARE
         else:
             raise AssertionError('Should not reach here')
@@ -69,7 +68,7 @@ class Env:
 
     def _parse(self, content):
         if self.type == 0:
-            self.winner = content['winner']
+            self.winners = content['winners']
         else:
             self.hand_cards = content['hand_cards']
             self.public = content['public']
@@ -82,14 +81,16 @@ class Env:
                 self.mem.set_play_area(
                     self.current_player, self.action_performed)
                 self.mem.record_cards(self.action_performed)
-            elif self.type == 2:
+            elif self.type in [2, 5, 6]:
                 self.mem.my_id = self.current_player
 
     def print_play_area(self):
         for player in range(4):
             prefix = '*' if player == self.current_player else ' '
-            print('{} {}: {}'.format(
-                prefix, player, self.mem.play_area[player]))
+            rest = self.public[player]['rest']
+            play_area = self.mem.play_area[player]
+            print('{} {}({}): {}, {}'.format(
+                prefix, player, rest, play_area['type'], play_area['action']))
 
 
 class BaseClient(WebSocketClient):
@@ -109,10 +110,13 @@ class BaseClient(WebSocketClient):
             self.finish(self.env)
         elif self.env.type == 1:
             self.others_play(self.env)
-        elif self.env.type in [2, 5] and self.env.action_list:
+        elif self.env.type in [2, 5, 6]:
+            assert self.env.action_list
             action = self.my_play(self.env)
             self.env.my_choice(action)
             self.send(json.dumps(action))
+        else:
+            raise AssertionError('Should not reach here')
 
     def my_play(self, env):
         return {}

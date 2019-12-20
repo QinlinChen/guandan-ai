@@ -12,8 +12,6 @@ class RandomClient(BaseClient):
         print('------------------ my play ----------------------')
         env.print_play_area()
 
-        time.sleep(1)
-
         all_card_types = list(env.action_list.keys())
         card_type = random.choice(all_card_types)
         all_ranks = list(env.action_list[card_type].keys())
@@ -21,7 +19,7 @@ class RandomClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = random.choice(all_actions)
 
-        print('Choose action:', action)
+        print('Choose {}:{}'.format(card_type, action))
 
         return {
             'action': action,
@@ -31,9 +29,10 @@ class RandomClient(BaseClient):
 
     def others_play(self, env):
         print('----------------- others play -------------------')
-        print(env.action_performed)
         env.print_play_area()
+        print('Choose {}: {}'.format(
+            env.action_performed['type'], env.action_performed['action']))
 
     def finish(self, env):
         print('-------------------- finish ---------------------')
-        print('finish winner:', env.winner)
+        print('finish winners:', env.winners)
