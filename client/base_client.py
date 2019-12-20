@@ -92,6 +92,14 @@ class Env:
             print('{} {}({}): {}, {}'.format(
                 prefix, player, rest, play_area['type'], play_area['action']))
 
+    def i_have_priority(self):
+        assert self.mem.my_id == self.current_player
+        for player in range(4):
+            if player != self.mem.my_id:
+                if self.mem.play_area[player]['type'] != 'PASS':
+                    return False
+        return True
+
 
 class BaseClient(WebSocketClient):
 
@@ -106,6 +114,7 @@ class BaseClient(WebSocketClient):
         content = json.loads(str(message))
         self.env.see(content)
 
+        # dispatch event
         if self.env.type == 0:
             self.finish(self.env)
         elif self.env.type == 1:
@@ -113,6 +122,8 @@ class BaseClient(WebSocketClient):
         elif self.env.type in [2, 5, 6]:
             assert self.env.action_list
             action = self.my_play(self.env)
+            if not action:
+                raise ValueError('Invalid action')
             self.env.my_choice(action)
             self.send(json.dumps(action))
         else:
