@@ -1,4 +1,5 @@
 from .base_client import BaseClient
+import client.utils as utils
 
 
 def _gen_choice_list(choices):
@@ -38,20 +39,18 @@ class HumanClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = _input_from_choices(all_actions, 'input action: ')
 
-        print('Choose {}:{}'.format(card_type, action))
-
-        return {
+        result = {
             'action': action,
             'type': card_type,
             'rank': rank
         }
+        print('Choose', utils.action_to_str(result))
+        return result
 
     def others_play(self, env):
         print('----------------- others play -------------------')
         env.print_play_area()
-        print('Choose {}: {}'.format(
-            env.action_performed['type'], env.action_performed['action']))
 
     def finish(self, env):
         print('-------------------- finish ---------------------')
-        print('finish winner:', env.winner)
+        print('finish winners:', env.winners)

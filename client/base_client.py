@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 from ws4py.client.threadedclient import WebSocketClient
+import client.utils as utils
 
 
 class EnvState(Enum):
@@ -87,10 +88,22 @@ class Env:
     def print_play_area(self):
         for player in range(4):
             prefix = '*' if player == self.current_player else ' '
-            rest = self.public[player]['rest']
             play_area = self.mem.play_area[player]
-            print('{} {}({}): {}, {}'.format(
-                prefix, player, rest, play_area['type'], play_area['action']))
+            print('{} {}({}): {}'.format(
+                prefix, player, self.rest_hand_cards(player),
+                utils.action_to_str(play_area)))
+
+    def my_id(self):
+        return self.mem.my_id
+
+    def my_ally(self):
+        return utils.ally_player(self.mem.my_id)
+
+    def my_next_player(self):
+        return utils.next_player(self.mem.my_id)
+
+    def my_prev_player(self):
+        return utils.next_player(self.mem.my_id)
 
     def i_have_priority(self):
         assert self.mem.my_id == self.current_player
@@ -100,18 +113,21 @@ class Env:
                     return False
         return True
 
+    def rest_hand_cards(self, player):
+        return self.public[player]['rest']
+
 
 class BaseClient(WebSocketClient):
 
     def __init__(self, url,):
         super().__init__(url)
-        self.env = Env()
+        self.env=Env()
 
-    def closed(self, code, reason=None):
+    def closed(self, code, reason = None):
         print('Closed down', code, reason)
 
     def received_message(self, message):
-        content = json.loads(str(message))
+        content=json.loads(str(message))
         self.env.see(content)
 
         # dispatch event
@@ -121,7 +137,7 @@ class BaseClient(WebSocketClient):
             self.others_play(self.env)
         elif self.env.type in [2, 5, 6]:
             assert self.env.action_list
-            action = self.my_play(self.env)
+            action=self.my_play(self.env)
             if not action:
                 raise ValueError('Invalid action')
             self.env.my_choice(action)
