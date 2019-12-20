@@ -1,4 +1,5 @@
 from .base_client import BaseClient
+import client.utils as utils
 import random
 import time
 
@@ -18,10 +19,6 @@ class RandomClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = random.choice(all_actions)
 
-        print('Choose {}: {}'.format(card_type, action))
-
-        return {
-            'action': action,
-            'type': card_type,
-            'rank': rank
-        }
+        result = {'action': action, 'type': card_type, 'rank': rank}
+        print('Choose', utils.action_to_str(result))
+        return result

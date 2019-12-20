@@ -101,11 +101,7 @@ class AIClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = random.choice(all_actions)
 
-        return {
-            'action': action,
-            'type': card_type,
-            'rank': rank
-        }
+        return {'type': card_type, 'rank': rank, 'action': action}
 
     def min_strategy(self, env, card_type=None):
         if not card_type or card_type not in env.action_list:
@@ -117,8 +113,4 @@ class AIClient(BaseClient):
         all_actions = list(env.action_list[card_type][min_rank])
         first_action = all_actions[0]
 
-        return {
-            'action': first_action,
-            'type': card_type,
-            'rank': min_rank
-        }
+        return {'type': card_type, 'rank': min_rank, 'action': first_action}

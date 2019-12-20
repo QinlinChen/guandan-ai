@@ -39,11 +39,7 @@ class HumanClient(BaseClient):
         all_actions = list(env.action_list[card_type][rank])
         action = _input_from_choices(all_actions, 'input action: ')
 
-        result = {
-            'action': action,
-            'type': card_type,
-            'rank': rank
-        }
+        result = {'action': action, 'type': card_type, 'rank': rank}
         print('Choose', utils.action_to_str(result))
         return result
 

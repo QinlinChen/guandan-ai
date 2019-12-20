@@ -18,9 +18,9 @@ class PersistentMem():
     def refresh(self):
         self.cards = []
         self.play_area = [{
-            'action': [[0, 'PASS']],
             'type': 'PASS',
-            'rank': 'PASS'
+            'rank': 'PASS',
+            'action': [[0, 'PASS']]
         }] * 4
         self.my_id = -1
 
@@ -121,13 +121,13 @@ class BaseClient(WebSocketClient):
 
     def __init__(self, url,):
         super().__init__(url)
-        self.env=Env()
+        self.env = Env()
 
-    def closed(self, code, reason = None):
+    def closed(self, code, reason=None):
         print('Closed down', code, reason)
 
     def received_message(self, message):
-        content=json.loads(str(message))
+        content = json.loads(str(message))
         self.env.see(content)
 
         # dispatch event
@@ -137,7 +137,7 @@ class BaseClient(WebSocketClient):
             self.others_play(self.env)
         elif self.env.type in [2, 5, 6]:
             assert self.env.action_list
-            action=self.my_play(self.env)
+            action = self.my_play(self.env)
             if not action:
                 raise ValueError('Invalid action')
             self.env.my_choice(action)
@@ -146,7 +146,7 @@ class BaseClient(WebSocketClient):
             raise AssertionError('Should not reach here')
 
     def my_play(self, env):
-        return {}
+        return {'type': 'PASS', 'rank': 'PASS', 'action': [[0, 'PASS']]}
 
     def others_play(self, env):
         pass
