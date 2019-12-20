@@ -27,6 +27,9 @@ class PersistentMem():
         # TODO: record cards
         pass
 
+    def query_has_larger(self, action):
+        pass
+
     def set_my_play_area(self, action):
         assert self.my_id != -1
         self.play_area[self.my_id] = action

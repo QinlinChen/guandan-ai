@@ -1,43 +1,4 @@
-import json
-from ws4py.client.threadedclient import WebSocketClient
-
-
-class HumanClient(WebSocketClient):
-
-    def __init__(self, url,):
-        super().__init__(url)
-
-    def closed(self, code, reason=None):
-        print('Closed down', code, reason)
-
-    def received_message(self, message):
-        content = json.loads(str(message))
-
-        print('--------------------------------------------------------')
-        print('message type {}'.format(content['type']))
-        for i in range(0, 4):
-            print(self._card_mem.play_area(i))
-
-        if 'action_list' in content and content['action_list']:
-            action = self._human_play(content['action_list'])
-            self.send(json.dumps(action))
-            print('Choose action:', action)
-
-    def _human_play(self, action_list):
-        all_card_types = list(action_list.keys())
-        card_type = _input_from_choices(all_card_types, 'input card type: ')
-
-        all_ranks = list(action_list[card_type].keys())
-        rank = _input_from_choices(all_ranks, 'input rank: ')
-
-        all_actions = list(action_list[card_type][rank])
-        action = _input_from_choices(all_actions, 'input action: ')
-
-        return {
-            'action': action,
-            'type': card_type,
-            'rank': rank
-        }
+from .base_client import BaseClient
 
 
 def _gen_choice_list(choices):
@@ -59,3 +20,37 @@ def _input_from_choices(choices, prompt=None):
     if index >= len(choices):
         index = 0
     return choices[index]
+
+
+class HumanClient(BaseClient):
+
+    def __init__(self, url):
+        super().__init__(url)
+
+    def my_play(self, env):
+        print('------------------ my play ----------------------')
+        env.print_play_area()
+
+        all_card_types = list(env.action_list.keys())
+        card_type = _input_from_choices(all_card_types, 'input card type: ')
+        all_ranks = list(env.action_list[card_type].keys())
+        rank = _input_from_choices(all_ranks, 'input rank: ')
+        all_actions = list(env.action_list[card_type][rank])
+        action = _input_from_choices(all_actions, 'input action: ')
+
+        print('Choose action:', action)
+
+        return {
+            'action': action,
+            'type': card_type,
+            'rank': rank
+        }
+
+    def others_play(self, env):
+        print('----------------- others play -------------------')
+        print(env.action_performed)
+        env.print_play_area()
+    
+    def finish(self, env):
+        print('-------------------- finish ---------------------')
+        print('finish winner:', env.winner)
