@@ -1,12 +1,12 @@
-import json
-from enum import Enum
 from ws4py.client.threadedclient import WebSocketClient
 import client.utils as utils
+import json
+from enum import Enum
 
 
 class EnvState(Enum):
     PREPARE = 0
-    PALY = 1
+    PLAY = 1
 
 
 class PersistentMem():
@@ -54,8 +54,8 @@ class Env:
             if self.type == 0:
                 raise ValueError('Should not receive message type 0')
             self.mem.refresh()
-            self._state = EnvState.PALY
-        elif self._state == EnvState.PALY:
+            self._state = EnvState.PLAY
+        elif self._state == EnvState.PLAY:
             if self.type == 0:
                 self._state = EnvState.PREPARE
         else:
@@ -130,7 +130,7 @@ class BaseClient(WebSocketClient):
         content = json.loads(str(message))
         self.env.see(content)
 
-        # dispatch event
+        # Dispatch event
         if self.env.type == 0:
             self.finish(self.env)
         elif self.env.type == 1:

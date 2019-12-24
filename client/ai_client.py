@@ -1,7 +1,7 @@
 from .base_client import BaseClient
+import client.utils as utils
 import random
 import time
-import client.utils as utils
 
 
 class AIClient(BaseClient):
@@ -23,6 +23,10 @@ class AIClient(BaseClient):
 
         print('Choose', utils.action_to_str(action))
         return action
+
+    # ----------------------------------------------------------
+    #               Nomral Playing Strategies
+    # ----------------------------------------------------------
 
     def normal_strategy(self, env):
         if env.i_have_priority():
@@ -51,10 +55,10 @@ class AIClient(BaseClient):
             card_type = list(partition.keys())[0]
             return self.min_strategy(env, card_type=card_type)
         if len(partition) in [2, 3]:
-            fire_card = set(
-                [card_type for card_type in partition if utils.is_fire_card])
-            non_fire_card = set(
-                [card_type for card_type in partition if not utils.is_fire_card])
+            fire_card = set([card_type for card_type in partition
+                             if utils.is_fire_card(card_type)])
+            non_fire_card = set([card_type for card_type in partition
+                                 if not utils.is_fire_card(card_type)])
             if len(fire_card) and len(non_fire_card):
                 return self.min_strategy(env, card_type=non_fire_card.pop())
         return None
@@ -85,12 +89,18 @@ class AIClient(BaseClient):
         # TODO
         return self.min_strategy(env)
 
+    # ----------------------------------------------------------
+    #                Tribute and Back Strategies
+    # ----------------------------------------------------------
     def tribute_strategy(self, env):
         return self.random_strategy(env, card_type='tribute')
 
     def back_strategy(self, env):
         return self.min_strategy(env, card_type='back')
 
+    # ----------------------------------------------------------
+    #                     Basic Strategies
+    # ----------------------------------------------------------
     def random_strategy(self, env, card_type=None):
         if not card_type or card_type not in env.action_list:
             all_card_types = list(env.action_list.keys())
@@ -105,6 +115,10 @@ class AIClient(BaseClient):
 
     def min_strategy(self, env, card_type=None):
         if not card_type or card_type not in env.action_list:
+            if card_type and card_type not in env.action_list:
+                print(card_type)
+                print(env.action_list)
+                assert False  # guard
             all_card_types = env.action_list.keys()
             card_type = min(all_card_types, key=utils.card_type_order)
 
