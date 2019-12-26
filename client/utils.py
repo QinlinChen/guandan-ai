@@ -84,9 +84,13 @@ def _attr_init_and_append(obj, attr, val):
     obj[attr].append(val)
 
 
+def pass_action():
+    return {'type': 'PASS', 'rank': 'PASS', 'action': [[0, 'PASS']]}
+
 # ----------------------------------------------------------
 #                       Statistics
 # ----------------------------------------------------------
+
 
 def count_hand_cards(hand_cards):
     '''Return a map: rank -> cards with this rank.'''

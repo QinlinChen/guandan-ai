@@ -17,11 +17,7 @@ class PersistentMem():
 
     def refresh(self):
         self.cards = []
-        self.play_area = [{
-            'type': 'PASS',
-            'rank': 'PASS',
-            'action': [[0, 'PASS']]
-        }] * 4
+        self.play_area = [utils.pass_action()] * 4
         self.my_id = -1
 
     def record_cards(self, action):
@@ -116,6 +112,9 @@ class Env:
     def rest_hand_cards(self, player):
         return self.public[player]['rest']
 
+    def play_area(self, player):
+        return self.mem.play_area[player]
+
 
 class BaseClient(WebSocketClient):
 
@@ -146,7 +145,7 @@ class BaseClient(WebSocketClient):
             raise AssertionError('Should not reach here')
 
     def my_play(self, env):
-        return {'type': 'PASS', 'rank': 'PASS', 'action': [[0, 'PASS']]}
+        return utils.pass_action()
 
     def others_play(self, env):
         pass
