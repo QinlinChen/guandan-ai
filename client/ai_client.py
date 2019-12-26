@@ -1,6 +1,5 @@
 from .base_client import BaseClient
 import client.utils as utils
-import random
 import time
 
 
@@ -20,8 +19,11 @@ class AIClient(BaseClient):
             action = self.back_strategy(env)
         else:
             raise AssertionError('Should not reach here')
+        
+        prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
+        print(prefix_map[env.type], utils.action_to_str(action))
 
-        print('Choose', utils.action_to_str(action))
+        time.sleep(1)
         return action
 
     # ----------------------------------------------------------
@@ -89,14 +91,33 @@ class AIClient(BaseClient):
         action = self.help_ally_strategy_without_priority(env)
         if action:
             return action
-        # TODO partition = utils.partition(env.hand_cards)
-        return self.min_strategy(env)
+
+        partition = set(utils.partition(env.hand_cards).keys())
+        available = set(env.action_list.keys())
+        p_and_a = partition.intersection(available)
+
+        last_card_type = env.last_card_type()
+        assert last_card_type
+        if last_card_type in p_and_a:
+            return self.min_strategy(env, last_card_type)
+        if not p_and_a:
+            # TODO: subpartition
+            return utils.pass_action()
+        if 'Bomb' in p_and_a:
+            if utils.card_type_cmp(last_card_type, 'ThreePair') >= 0:
+                last_card_rank = env.last_card_rank()
+                assert last_card_rank
+                if utils.rank_cmp(last_card_rank, '10') > 0:
+                    return self.min_strategy(env, 'Bomb')
+        return utils.pass_action()
 
     def help_ally_strategy_without_priority(self, env):
+        if not env.is_active(env.my_ally()):
+            return None
         ally_action = env.play_area(env.my_ally())
         if utils.is_fire_card(ally_action['type']):
             return utils.pass_action()
-        if utils.rank_order(ally_action['rank']) >= utils.rank_order('K'):
+        if utils.rank_cmp(ally_action['rank'], 'K') >= 0:
             return utils.pass_action()
         return None
 
@@ -108,34 +129,3 @@ class AIClient(BaseClient):
 
     def back_strategy(self, env):
         return self.min_strategy(env, card_type='back')
-
-    # ----------------------------------------------------------
-    #                     Basic Strategies
-    # ----------------------------------------------------------
-    def random_strategy(self, env, card_type=None):
-        if not card_type or card_type not in env.action_list:
-            all_card_types = list(env.action_list.keys())
-            card_type = random.choice(all_card_types)
-
-        all_ranks = list(env.action_list[card_type].keys())
-        rank = random.choice(all_ranks)
-        all_actions = list(env.action_list[card_type][rank])
-        action = random.choice(all_actions)
-
-        return {'type': card_type, 'rank': rank, 'action': action}
-
-    def min_strategy(self, env, card_type=None):
-        if not card_type or card_type not in env.action_list:
-            if card_type and card_type not in env.action_list:
-                print(card_type)
-                print(env.action_list)
-                assert False  # guard
-            all_card_types = env.action_list.keys()
-            card_type = min(all_card_types, key=utils.card_type_order)
-
-        all_ranks = env.action_list[card_type].keys()
-        min_rank = min(all_ranks, key=utils.rank_order)
-        all_actions = list(env.action_list[card_type][min_rank])
-        first_action = all_actions[0]
-
-        return {'type': card_type, 'rank': min_rank, 'action': first_action}

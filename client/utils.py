@@ -54,19 +54,31 @@ def rank_order(rank):
     return map[rank]
 
 
+def rank_cmp(rank_l, rank_r):
+    order_l = rank_order(rank_l)
+    order_r = rank_order(rank_r)
+    return order_l - order_r
+
+
 def card_type_order(card_type):
     map = {
         'Single': 0, 'Pair': 1, 'Trips': 1, 'ThreePair': 3,
         'TripsPair': 3, 'ThreeWithTwo': 5, 'Straight': 6,
         'StraightFlush': 7, 'Bomb': 8, 'JOKER': 9,
-        'PASS': 10, 'tribute': 10, 'back': 10
+        'PASS': 10, 'tribute': 10, 'back': 10, 'anti': 10
     }
     return map[card_type]
 
 
+def card_type_cmp(card_type_l, card_type_r):
+    order_l = card_type_order(card_type_l)
+    order_r = card_type_order(card_type_r)
+    return order_l - order_r
+
 # ----------------------------------------------------------
 #                      Miscellaneous
 # ----------------------------------------------------------
+
 
 card_types = [
     'Single', 'Pair', 'Trips', 'ThreePair', 'ThreeWithTwo', 'TripsPair',

@@ -2,11 +2,13 @@ from ws4py.client.threadedclient import WebSocketClient
 import client.utils as utils
 import json
 from enum import Enum
+import random
 
 
 class EnvState(Enum):
     PREPARE = 0
-    PLAY = 1
+    NORMAL_PLAY = 1
+    TRIBUTE_OR_BACK = 2
 
 
 class PersistentMem():
@@ -16,9 +18,37 @@ class PersistentMem():
         self.refresh()
 
     def refresh(self):
-        self.cards = []
-        self.play_area = [utils.pass_action()] * 4
-        self.my_id = -1
+        self._cards = []
+        self._play_area = [utils.pass_action()] * 4
+        self._my_id = -1
+        self._active = [False] * 4
+
+    def my_id(self):
+        return self._my_id
+
+    def set_my_id(self, id):
+        self._my_id = id
+
+    def is_active(self, player):
+        return self._active[player]
+
+    def set_active(self, player, value):
+        self._active[player] = value
+
+    def clear_active(self):
+        for player in range(4):
+            self.set_active(player, False)
+
+    def play_area(self, player):
+        return self._play_area[player]
+
+    def set_play_area(self, player, action):
+        self._play_area[player] = action
+        self.set_active(player, True)
+
+    def set_my_play_area(self, action):
+        assert self.my_id() != -1
+        self.set_play_area(self.my_id(), action)
 
     def record_cards(self, action):
         # TODO: record cards
@@ -27,43 +57,33 @@ class PersistentMem():
     def query_has_larger(self, action):
         pass
 
-    def set_my_play_area(self, action):
-        assert self.my_id != -1
-        self.play_area[self.my_id] = action
-
-    def set_play_area(self, player, action):
-        self.play_area[player] = action
-
 
 class Env:
 
     def __init__(self):
         self._state = EnvState.PREPARE
-        self.mem = PersistentMem()
+        self._mem = PersistentMem()
 
     def see(self, content):
         if content['type'] not in [0, 1, 2, 5, 6]:
             raise ValueError('Invalid content type: {}'.format(content))
-        self.type = content['type']
-
-        if self._state == EnvState.PREPARE:
-            if self.type == 0:
-                raise ValueError('Should not receive message type 0')
-            self.mem.refresh()
-            self._state = EnvState.PLAY
-        elif self._state == EnvState.PLAY:
-            if self.type == 0:
-                self._state = EnvState.PREPARE
-        else:
-            raise AssertionError('Should not reach here')
 
         self._parse(content)
+        self._transfer_state()
+        self._memoize()
 
     def my_choice(self, action):
-        self.mem.set_my_play_area(action)
-        self.mem.record_cards(action)
+        # Only memoize during normal playing
+        if self._state != EnvState.NORMAL_PLAY:
+            return
+
+        self._mem.set_my_play_area(action)
+        self._mem.record_cards(action)
+        self._mem.clear_active()
 
     def _parse(self, content):
+        self._content = content # Used for debug info
+        self.type = content['type']
         if self.type == 0:
             self.winners = content['winners']
         else:
@@ -74,46 +94,113 @@ class Env:
             self.action_list = content['action_list']
             self.action_performed = content['action_performed']
 
-            if self.type == 1:
-                self.mem.set_play_area(
-                    self.current_player, self.action_performed)
-                self.mem.record_cards(self.action_performed)
-            elif self.type in [2, 5, 6]:
-                self.mem.my_id = self.current_player
+    def _transfer_state(self):
+        assert self.type in [0, 1, 2, 5, 6]
+
+        if self._state == EnvState.PREPARE:
+            assert self.type != 0
+            if self._see_tribute_or_back():
+                self._state = EnvState.TRIBUTE_OR_BACK
+            elif self._see_normal_play():
+                self._mem.clear_active()
+                self._state = EnvState.NORMAL_PLAY
+            else:
+                raise AssertionError('Should not reach here')
+        elif self._state == EnvState.TRIBUTE_OR_BACK:
+            assert self.type != 0
+            if self._see_normal_play():
+                self._state = EnvState.NORMAL_PLAY
+        elif self._state == EnvState.NORMAL_PLAY:
+            assert self.type in [0, 1, 2]
+            if self.type == 0:
+                self._mem.refresh()
+                self._state = EnvState.PREPARE
+            else:
+                assert self._see_normal_play()
+        else:
+            raise AssertionError('Should not reach here')
+
+    def _see_tribute_or_back(self):
+        if self.type == 1:
+            return self.action_performed['type'] in ['tribute', 'back', 'anti']
+        return self.type in [5, 6]
+
+    def _see_normal_play(self):
+        if self.type == 1:
+            return self.action_performed['type'] not in ['tribute', 'back', 'anti']
+        return self.type == 2
+
+    def _memoize(self):
+        # Only memoize during normal playing
+        if self._state != EnvState.NORMAL_PLAY:
+            return
+
+        if self.type == 1:
+            self._mem.set_play_area(self.current_player, self.action_performed)
+            self._mem.record_cards(self.action_performed)
+        elif self.type == 2:
+            self._mem.set_my_id(self.current_player)
+        else:
+            raise AssertionError('Should not reach here')
 
     def print_play_area(self):
         for player in range(4):
             prefix = '*' if player == self.current_player else ' '
-            play_area = self.mem.play_area[player]
+            play_area = self._mem.play_area(player)
             print('{} {}({}): {}'.format(
                 prefix, player, self.rest_hand_cards(player),
                 utils.action_to_str(play_area)))
 
     def my_id(self):
-        return self.mem.my_id
+        return self._mem.my_id()
 
     def my_ally(self):
-        return utils.ally_player(self.mem.my_id)
+        return utils.ally_player(self._mem.my_id())
 
     def my_next_player(self):
-        return utils.next_player(self.mem.my_id)
+        return utils.next_player(self._mem.my_id())
 
     def my_prev_player(self):
-        return utils.next_player(self.mem.my_id)
-
-    def i_have_priority(self):
-        assert self.mem.my_id == self.current_player
-        for player in range(4):
-            if player != self.mem.my_id:
-                if self.mem.play_area[player]['type'] != 'PASS':
-                    return False
-        return True
+        return utils.next_player(self._mem.my_id())
 
     def rest_hand_cards(self, player):
         return self.public[player]['rest']
 
     def play_area(self, player):
-        return self.mem.play_area[player]
+        return self._mem.play_area(player)
+
+    def is_active(self, player):
+        return self._mem.is_active(player)
+
+    def i_have_priority(self):
+        assert self.my_id() == self.current_player
+        player = utils.prev_player(self.my_id())
+        while player != self.current_player:
+            if self.is_active(player) and \
+                    self.play_area(player)['type'] != 'PASS':
+                return False
+            player = utils.prev_player(player)
+        return True
+
+    def last_card_type(self):
+        player = utils.prev_player(self.current_player)
+        while player != self.current_player:
+            if self.is_active(player):
+                action = self.play_area(player)
+                if action['type'] != 'PASS':
+                    return action['type']
+            player = utils.prev_player(player)
+        return None
+
+    def last_card_rank(self):
+        player = utils.prev_player(self.current_player)
+        while player != self.current_player:
+            if self.is_active(player):
+                action = self.play_area(player)
+                if action['type'] != 'PASS':
+                    return action['rank']
+            player = utils.prev_player(player)
+        return None
 
 
 class BaseClient(WebSocketClient):
@@ -137,12 +224,26 @@ class BaseClient(WebSocketClient):
         elif self.env.type in [2, 5, 6]:
             assert self.env.action_list
             action = self.my_play(self.env)
-            if not action:
-                raise ValueError('Invalid action')
+            action = self._verify_action(action)
             self.env.my_choice(action)
             self.send(json.dumps(action))
         else:
             raise AssertionError('Should not reach here')
+
+    def _verify_action(self, action):
+        if not action:
+            raise ValueError('Invalid action')
+        if action['type'] not in self.env.action_list:
+            print('----------------------Warning-------------------------')
+            print('The chosen type {} not in action list'.format(action['type']))
+            print('Current state:')
+            for player in range(4):
+                print(self.env._mem.play_area(player),
+                      'active:', self.env.is_active(player))
+            print(self.env.action_list)
+            # This warning is caused by some server's bugs
+            return self.min_strategy(self.env)
+        return action
 
     def my_play(self, env):
         return utils.pass_action()
@@ -152,3 +253,34 @@ class BaseClient(WebSocketClient):
 
     def finish(self, env):
         pass
+
+    # ----------------------------------------------------------
+    #                     Basic Strategies
+    # ----------------------------------------------------------
+    def random_strategy(self, env, card_type=None):
+        if not card_type or card_type not in env.action_list:
+            all_card_types = list(env.action_list.keys())
+            card_type = random.choice(all_card_types)
+
+        all_ranks = list(env.action_list[card_type].keys())
+        rank = random.choice(all_ranks)
+        all_actions = list(env.action_list[card_type][rank])
+        action = random.choice(all_actions)
+
+        return {'type': card_type, 'rank': rank, 'action': action}
+
+    def min_strategy(self, env, card_type=None):
+        if not card_type or card_type not in env.action_list:
+            if card_type and card_type not in env.action_list:
+                print(card_type)
+                print(env.action_list)
+                assert False  # guard
+            all_card_types = env.action_list.keys()
+            card_type = min(all_card_types, key=utils.card_type_order)
+
+        all_ranks = env.action_list[card_type].keys()
+        min_rank = min(all_ranks, key=utils.rank_order)
+        all_actions = list(env.action_list[card_type][min_rank])
+        first_action = all_actions[0]
+
+        return {'type': card_type, 'rank': min_rank, 'action': first_action}
