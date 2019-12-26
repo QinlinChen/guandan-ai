@@ -23,7 +23,7 @@ class AIClient(BaseClient):
         prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
         print(prefix_map[env.type], utils.action_to_str(action))
 
-        time.sleep(1)
+        # time.sleep(1)
         return action
 
     # ----------------------------------------------------------
