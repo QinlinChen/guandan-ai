@@ -18,7 +18,8 @@ class PersistentMem():
         self.refresh()
 
     def refresh(self):
-        self._cards = []
+        self._cards = {}
+        self._max_rank = {}
         self._play_area = [utils.pass_action()] * 4
         self._my_id = -1
         self._active = [False] * 4
@@ -51,9 +52,45 @@ class PersistentMem():
         self.set_play_area(self.my_id(), action)
 
     def record_cards(self, action):
-        # TODO: record cards
-        pass
+        for card in action['action']:
+            rank = card[1]
+            if rank == 'JOKER':
+                if card[0] == 0:
+                    rank = 'JOKER_0'
+                else:
+                    rank = 'JOKER_1'
+            if rank not in utils.card_ranks:
+                continue
+            if rank not in self._cards.keys():
+                self._cards[rank] = 0
+            else:
+                self._cards[rank] += 1
+        self._max_rank['Single'] = cur_max_rank('Single')
+        self._max_rank['Pair'] = cur_max_rank('Pair')
+    
+    def cur_max_rank(self, type):
+        for rank in reversed(card_ranks):
+            if type == 'Single':
+                if get_left_cards_num(rank) >= 1:
+                    return rank
+            elif type == 'Pair':
+                if get_left_cards_num(rank) >= 2:
+                    return rank
+            raise AssertionError('Should not reach here')
+        raise AssertionError('Should not reach here')
 
+
+    def get_left_cards_num(self, rank):
+        assert rank in utils.card_ranks
+        if rank == 'JOKER_0' or rank == 'JOKER_1':
+            if rank in _cards.keys():
+                return 2 - _cards[rank]
+            return 2
+        if rank in _cards.keys():
+            return 8 - _cards[rank]
+        return 8
+
+        
     def query_has_larger(self, action):
         pass
 
@@ -201,6 +238,10 @@ class Env:
                     return action['rank']
             player = utils.prev_player(player)
         return None
+    
+    def max_rank(self, type):
+        assert type == 'Single' or type == 'Pair'
+        return self._mem._max_rank[type]
 
 
 class BaseClient(WebSocketClient):

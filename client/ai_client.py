@@ -31,10 +31,31 @@ class AIClient(BaseClient):
     # ----------------------------------------------------------
 
     def normal_strategy(self, env):
+        action, unsafe = self.ending_strategy(env)
+        if action:
+            return action
         if env.i_have_priority():
             return self.normal_strategy_with_priority(env)
         else:
             return self.normal_strategy_without_priority(env)
+
+    def ending_strategy(self, env):
+        next_enemy_left_cards_n = env.rest_hand_cards(env.my_next_player())
+        ally_left_cards_n = env.rest_hand_cards(env.my_ally())
+        if next_enemy_left_cards_n == 1 or next_enemy_left_cards_n == 2:
+            return None, True
+        if ally_left_cards_n == 1:
+            action = self.min_strategy(env, 'Single')
+            if action:
+                return action, False
+            return None, False
+        if ally_left_cards_n == 2:
+            action = self.min_strategy(env, 'Pair')
+            if action:
+                return action, False
+            return None, False
+        return None, False
+
 
     def normal_strategy_with_priority(self, env):
         action = self.win_with_high_prob_strategy(env)

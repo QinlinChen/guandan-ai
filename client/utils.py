@@ -85,6 +85,11 @@ card_types = [
     'Straight', 'StraightFlush', 'Bomb', 'JOKER'
 ]
 
+card_ranks = [
+    '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A',
+    'JOKER_0', 'JOKER_1'
+]
+
 
 def is_fire_card(card_type):
     return card_type in ['StraightFlush', 'Bomb', 'JOKER']
@@ -98,6 +103,7 @@ def _attr_init_and_append(obj, attr, val):
 
 def pass_action():
     return {'type': 'PASS', 'rank': 'PASS', 'action': [[0, 'PASS']]}
+
 
 # ----------------------------------------------------------
 #                       Statistics
