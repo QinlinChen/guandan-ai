@@ -1,6 +1,7 @@
 import client.utils as utils
 from enum import Enum
 
+
 class EnvState(Enum):
     PREPARE = 0
     NORMAL_PLAY = 1

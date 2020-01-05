@@ -4,6 +4,7 @@ import client.utils as utils
 import json
 import random
 
+
 class BaseClient(WebSocketClient):
 
     def __init__(self, url,):
