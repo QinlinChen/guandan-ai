@@ -221,13 +221,17 @@
 
 \subsection{实验环境}
 
-安装Microsoft Windows 10专业版和Python 3.7.6的PC，芯片配置为Intel$^\circledR$ Xeon$^\circledR$  CPU E5 1620 v4 @3.50GHz，共有64G内存。
+安装Microsoft Windows 10专业版和Python 3.7.6的PC，
+芯片配置为Intel$^\circledR$ Xeon$^\circledR$  CPU E5 1620 v4 @3.50GHz，
+共有64G内存。
 
 \subsection{实验设计}
 
 为了验证我们的AI算法的有效性和性能，我们将其分别量化为胜率和运行时间。
 我们规定一局（round）游戏是指一队玩家从等级2开始打到等级A并最终获得本轮胜利的过程。
-胜率（win rate）的定义如下：\[\mathrm{win\_rate} = \frac{\mathrm{round}_{\mathrm{win}}}{\mathrm{round}_{\mathrm{total}}}\]其中$\mathrm{round}_{\mathrm{win}}$是指某方玩家赢取胜利的局数，$\mathrm{round}_{\mathrm{total}}$是指总局数。
+胜率（win rate）的定义如下：
+\[\mathrm{win\_rate} = \frac{\mathrm{round}_{\mathrm{win}}}{\mathrm{round}_{\mathrm{total}}}\]
+其中$\mathrm{round}_{\mathrm{win}}$是指某方玩家赢取胜利的局数，$\mathrm{round}_{\mathrm{total}}$是指总局数。
 运行时间（running time）是指某玩家在惯蛋游戏过程中，从服务器接收到可出牌集合的指令，
 到向服务器发送出牌指令之间的运行时间，单位为毫秒（ms）。
 
@@ -339,7 +343,8 @@
 
 \subsubsection{RQ3：运行时间}
 
-实验结果见表\ref{RQ3_result}。在10局比赛中，随机出牌算法、最小出牌算法和AI算法分别被调用了5148、4797和9335次（因有两个AI玩家故AI算法调用次数较多），
+实验结果见表\ref{RQ3_result}。在10局比赛中，随机出牌算法、最小出牌算法和AI算法
+分别被调用了5148、4797和9335次（因有两个AI玩家故AI算法调用次数较多），
 每次调用的平均运行时间分别为0.018、0.019和0.064毫秒。
 由此可知AI算法的运行时间相比随机出牌算法和最小出牌算法分别增加了0.046毫秒和0.045毫秒，
 而因为后两者的运行时间相当短，故不会造成明显增加的时间开销，更不会影响用户体验，
