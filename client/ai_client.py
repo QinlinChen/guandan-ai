@@ -19,7 +19,7 @@ class AIClient(BaseClient):
             action = self.back_strategy(env)
         else:
             raise AssertionError('Should not reach here')
-        
+
         prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
         print(prefix_map[env.type], utils.action_to_str(action))
 
@@ -31,8 +31,8 @@ class AIClient(BaseClient):
     # ----------------------------------------------------------
 
     def normal_strategy(self, env):
-        #action, unsafe = self.ending_strategy(env)
-        #if action:
+        # action, unsafe = self.ending_strategy(env)
+        # if action:
         #    return action
         if env.i_have_priority():
             return self.normal_strategy_with_priority(env)
@@ -55,7 +55,6 @@ class AIClient(BaseClient):
                 return action, False
             return None, False
         return None, False
-
 
     def normal_strategy_with_priority(self, env):
         action = self.win_with_high_prob_strategy(env)

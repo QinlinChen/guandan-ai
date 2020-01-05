@@ -90,7 +90,6 @@ class PersistentMem():
             return 8 - self._cards[rank]
         return 8
 
-        
     def query_has_larger(self, action):
         pass
 
@@ -119,7 +118,7 @@ class Env:
         self._mem.clear_active()
 
     def _parse(self, content):
-        self._content = content # Used for debug info
+        self._content = content  # Used for debug info
         self.type = content['type']
         if self.type == 0:
             self.winners = content['winners']
@@ -238,7 +237,7 @@ class Env:
                     return action['rank']
             player = utils.prev_player(player)
         return None
-    
+
     def max_rank(self, type):
         assert type == 'Single' or type == 'Pair'
         return self._mem._max_rank[type]
@@ -276,7 +275,8 @@ class BaseClient(WebSocketClient):
             raise ValueError('Invalid action')
         if action['type'] not in self.env.action_list:
             print('----------------------Warning-------------------------')
-            print('The chosen type {} not in action list'.format(action['type']))
+            print('The chosen type {} not in action list'.format(
+                action['type']))
             print('Current state:')
             for player in range(4):
                 print(self.env._mem.play_area(player),

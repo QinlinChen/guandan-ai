@@ -1,7 +1,5 @@
 from .base_client import BaseClient
 import client.utils as utils
-import random
-import time
 
 
 class RandomClient(BaseClient):
