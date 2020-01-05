@@ -51,6 +51,18 @@ class PersistentMem():
         assert self.my_id() != -1
         self.set_play_area(self.my_id(), action)
 
+    def cur_max_rank(self, type):
+        for rank in reversed(utils.card_ranks):
+            if type == 'Single':
+                if self.get_left_cards_num(rank) >= 1:
+                    return rank
+            elif type == 'Pair':
+                if self.get_left_cards_num(rank) >= 2:
+                    return rank
+            else:
+                raise AssertionError('Should not reach here')
+        return None
+
     def record_cards(self, action):
         for card in action['action']:
             rank = card[1]
@@ -65,29 +77,17 @@ class PersistentMem():
                 self._cards[rank] = 0
             else:
                 self._cards[rank] += 1
-        self._max_rank['Single'] = cur_max_rank('Single')
-        self._max_rank['Pair'] = cur_max_rank('Pair')
-    
-    def cur_max_rank(self, type):
-        for rank in reversed(card_ranks):
-            if type == 'Single':
-                if get_left_cards_num(rank) >= 1:
-                    return rank
-            elif type == 'Pair':
-                if get_left_cards_num(rank) >= 2:
-                    return rank
-            raise AssertionError('Should not reach here')
-        raise AssertionError('Should not reach here')
-
+        self._max_rank['Single'] = self.cur_max_rank('Single')
+        self._max_rank['Pair'] = self.cur_max_rank('Pair')
 
     def get_left_cards_num(self, rank):
         assert rank in utils.card_ranks
         if rank == 'JOKER_0' or rank == 'JOKER_1':
-            if rank in _cards.keys():
-                return 2 - _cards[rank]
+            if rank in self._cards.keys():
+                return 2 - self._cards[rank]
             return 2
-        if rank in _cards.keys():
-            return 8 - _cards[rank]
+        if rank in self._cards.keys():
+            return 8 - self._cards[rank]
         return 8
 
         

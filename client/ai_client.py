@@ -31,9 +31,9 @@ class AIClient(BaseClient):
     # ----------------------------------------------------------
 
     def normal_strategy(self, env):
-        action, unsafe = self.ending_strategy(env)
-        if action:
-            return action
+        #action, unsafe = self.ending_strategy(env)
+        #if action:
+        #    return action
         if env.i_have_priority():
             return self.normal_strategy_with_priority(env)
         else:
