@@ -5,6 +5,7 @@
 `/client`目录下是客户端代码，里面包含了四种客户端：
 - `BaseClient`：其它三个客户端的基类客户端。
 - `RandomClient`：随机出牌的客户端。
+- `MinClient`： 出当前可出的最小牌的客户端。
 - `HumanClient`：从命令行读取人类输入出牌的客户端。
 - `AIClient`：基于启发式规则的AI客户端。
 
