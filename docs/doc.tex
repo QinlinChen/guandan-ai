@@ -242,7 +242,7 @@
 	\item RQ3：我们设计的AI算法是否具有较为理想的运行时间开销？
 \end{itemize}
 
-针对RQ1，我们设置了多个实验组，在100局游戏中（每局游戏随机发牌）分别测试了每一实验组中小队A的胜率，
+针对RQ1，我们设置了多个实验组，在100局游戏中（每局游戏随机发牌）分别测试了每一实验组中小队A的胜率，测试三次并取中位值，
 以此验证我们设计的AI算法对于取得胜利的有效性。
 实验组的配置如表\ref{RQ1_config}所示，\texttt{AI}是指基于\texttt{AIClient}出牌策略的玩家（也即我们实现的AI算法），
 \texttt{min}是指基于\texttt{MinClient}出牌策略的玩家，\texttt{random}是指基于\texttt{RandomClient}出牌策略的玩家。
@@ -288,9 +288,9 @@
 \subsubsection{RQ1：有效性}
 
 实验结果见表\ref{RQ1_result}。我们可以看出基于AI算法的选手与一个基于随机出牌算法的选手组队，
-对阵两名基于随机出牌算法的选手时，胜率相当大，为0.95。
+对阵两名基于随机出牌算法的选手时，胜率相当大，为0.96。
 而当队友和对手的算法都替换为可以代表惯蛋新手的最小出牌算法时，胜率仍然较高，可以保证多数情况下胜出。
-若小队A由两名基于AI算法的选手组成，胜率则更高（由0.77提升至0.85），足见我们设计的AI算法对胜率的提升，
+若小队A由两名基于AI算法的选手组成，胜率则更高（由0.79提升至0.89），足见我们设计的AI算法对胜率的提升，
 这在一定程度上验证了它的有效性。
 
 \begin{table}
@@ -300,18 +300,18 @@
 	\begin{tabular}{|c|c|c|c|c|}
 		\hline
 		\multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率\\ \hline
-		AI & random & random & random & 0.95 \\ \hline
-		AI & min & min & min & 0.77 \\ \hline
-		AI & AI & min & min & 0.85 \\ \hline
+		AI & random & random & random & 0.96 \\ \hline
+		AI & min & min & min & 0.79 \\ \hline
+		AI & AI & min & min & 0.89 \\ \hline
 	\end{tabular}
 \end{table}
 
 \subsubsection{RQ2：启发式规则的贡献}
 
-实验结果见表\ref{RQ2_result}。在第一组中，四位选手全都基于最小出牌算法，胜率0.48接近0.50，符合预期的实验结果。
-对于仅采用了有牌权情形下的规则的AI算法，胜率猛增至0.82，而当仅采用无牌权情形下的规则时，
-胜率也有高于0.50的0.62，说明这两种规则都对胜率的提升（算法的有效性）有自己的贡献。
-将两个规则结合起来，我们可以得到0.85的胜率，对最小出牌算法有很大的胜算。
+实验结果见表\ref{RQ2_result}。在第一组中，四位选手全都基于最小出牌算法，胜率0.54接近0.50，符合预期的实验结果（因实验次数有限故与期望值存在偏差）。
+对于仅采用了有牌权情形下的规则的AI算法，胜率猛增至0.84，而当仅采用无牌权情形下的规则时，
+胜率也有高于0.50的0.68，说明这两种规则都对胜率的提升（算法的有效性）有自己的贡献。
+将两个规则结合起来，我们可以得到0.89的胜率，对最小出牌算法有很大的胜算。
 
 \begin{table}
 	\centering 
@@ -320,10 +320,10 @@
 	\begin{tabular}{|c|c|c|c|c|}
 		\hline
 		\multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率 \\ \hline
-		min & min & min & min & 0.48 \\ \hline
-		AI-act  & AI-act & min & min & 0.82 \\ \hline
-		AI-pass & AI-pass & min & min & 0.62 \\ \hline
-		AI-full & AI-full & min & min & 0.85 \\ \hline
+		min & min & min & min & 0.54 \\ \hline
+		AI-act  & AI-act & min & min & 0.84 \\ \hline
+		AI-pass & AI-pass & min & min & 0.68 \\ \hline
+		AI-full & AI-full & min & min & 0.89 \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -334,9 +334,9 @@
 	\begin{tabular}{|c|c|c|}
 		\hline
 		算法 & 调用次数 & 平均运行时间（ms） \\ \hline
-		random & 5148 & 0.018 \\ \hline
-		min & 4797 & 0.019 \\ \hline
-		AI & 9335 & 0.064 \\ \hline
+		random & 3795 & 0.0082 \\ \hline
+		min & 3525 & 0.0076 \\ \hline
+		AI & 6836 & 0.0391 \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -344,11 +344,11 @@
 \subsubsection{RQ3：运行时间}
 
 实验结果见表\ref{RQ3_result}。在10局比赛中，随机出牌算法、最小出牌算法和AI算法
-分别被调用了5148、4797和9335次（因有两个AI玩家故AI算法调用次数较多），
-每次调用的平均运行时间分别为0.018、0.019和0.064毫秒。
-由此可知AI算法的运行时间相比随机出牌算法和最小出牌算法分别增加了0.046毫秒和0.045毫秒，
+3795、3525和6836次（因有两个AI玩家故AI算法调用次数较多），
+每次调用的平均运行时间分别为0.0082、0.0076和0.0391毫秒。
+由此可知AI算法的运行时间相比随机出牌算法和最小出牌算法分别增加了0.0309毫秒和0.0315毫秒，
 而因为后两者的运行时间相当短，故不会造成明显增加的时间开销，更不会影响用户体验，
-因此我们设计的AI算法有较为理想的时间开销。
+因此我们设计的AI算法有较为理想的时间开销。考虑到选手的对家和对手所采用的算法可能会影响当前的算法运行时间，因平均运行时间相当短，影响是有限的，故将这一讨论留给未来的工作。
 
 \begin{thebibliography}{99}
   \bibitem{guandan-ai}
