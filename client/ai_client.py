@@ -1,7 +1,5 @@
 from .base_client import BaseClient
-from .stop_watch import StopWatch
 import client.utils as utils
-import time
 
 
 class AIClient(BaseClient):
@@ -26,7 +24,6 @@ class AIClient(BaseClient):
             prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
             print(prefix_map[env.type], utils.action_to_str(action))
 
-        # time.sleep(1)
         return action
 
     # ----------------------------------------------------------
@@ -38,8 +35,7 @@ class AIClient(BaseClient):
         # if action:
         #    return action
         if env.i_have_priority():
-            return self.min_strategy(env)
-            # return self.normal_strategy_with_priority(env)
+            return self.normal_strategy_with_priority(env)
         else:
             return self.normal_strategy_without_priority(env)
 
@@ -131,9 +127,9 @@ class AIClient(BaseClient):
             assert last_card_rank
             if utils.rank_cmp(last_card_rank, '10') > 0:
                 return self.min_strategy(env, 'Bomb')
-        print('we pass, but min strategy is: ', utils.action_to_str(self.min_strategy(env)))
-        print('last card type and rank', env.last_card_type(), env.last_card_rank())
-        print('hand cards', env.hand_cards)
+        # print('we pass, but min strategy is: ', utils.action_to_str(self.min_strategy(env)))
+        # print('last card type and rank:', env.last_card_type(), env.last_card_rank())
+        # print('hand cards:', env.hand_cards)
         return utils.pass_action()
 
     def help_ally_strategy_without_priority(self, env):

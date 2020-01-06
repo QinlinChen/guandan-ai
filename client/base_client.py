@@ -1,9 +1,9 @@
 from ws4py.client.threadedclient import WebSocketClient
-from client.env import Env
+from .env import Env
+from .stop_watch import StopWatch
 import client.utils as utils
 import json
 import random
-from client.stop_watch import StopWatch
 
 
 class BaseClient(WebSocketClient):
