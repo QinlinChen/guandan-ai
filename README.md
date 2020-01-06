@@ -22,4 +22,16 @@
 ## 使用方法
 首先启动服务端，然后从命令行使用下面的指令启动客户端：
 
-    python gd.py <client_type> <name>
+    python gd.py [-h] [-s {ai,random,min,human}] [-a ADDR] [-p PORT] [-t] [-v] name
+
+    positional arguments:
+      name                  set the client's name
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -s {ai,random,min,human}, --strategy {ai,random,min,human}
+                            choose the strategy
+      -a ADDR, --addr ADDR  set server's ip address
+      -p PORT, --port PORT  set server's port
+      -t, --time            measure the time consumed by method call
+      -v, --verbose         show more infomation

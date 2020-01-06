@@ -29,8 +29,8 @@ class State(Enum):
 
 class HumanClient(BaseClient):
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, name, addr, port, verbose, measure_time):
+        super().__init__(name, addr, port, verbose, measure_time)
 
     def my_play(self, env):
         print('------------------ my play ----------------------')

@@ -1,18 +1,18 @@
 from .base_client import BaseClient
+from .stop_watch import StopWatch
 import client.utils as utils
 import time
-from client.stop_watch import StopWatch
 
 
 class AIClient(BaseClient):
 
-    def __init__(self, url):
-        super().__init__(url)
-        self._stop_watch = StopWatch('AI')
+    def __init__(self, name, addr, port, verbose, measure_time):
+        super().__init__(name, addr, port, verbose, measure_time)
 
     def my_play(self, env):
-        print('------------------ my play ----------------------')
-        self._stop_watch.begin()
+        if self.verbose:
+            print('------------------ my play ----------------------')
+
         if env.type == 2:
             action = self.normal_strategy(env)
         elif env.type == 5:
@@ -22,10 +22,9 @@ class AIClient(BaseClient):
         else:
             raise AssertionError('Should not reach here')
 
-        self._stop_watch.end()
-        prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
-        print(prefix_map[env.type], utils.action_to_str(action))
-        self._stop_watch.print()
+        if self.verbose:
+            prefix_map = {2: 'Play', 5: 'Tribute', 6: 'Back'}
+            print(prefix_map[env.type], utils.action_to_str(action))
 
         # time.sleep(1)
         return action
@@ -39,7 +38,8 @@ class AIClient(BaseClient):
         # if action:
         #    return action
         if env.i_have_priority():
-            return self.normal_strategy_with_priority(env)
+            return self.min_strategy(env)
+            # return self.normal_strategy_with_priority(env)
         else:
             return self.normal_strategy_without_priority(env)
 
@@ -125,17 +125,16 @@ class AIClient(BaseClient):
         if last_card_type in p_and_a:
             return self.min_strategy(env, last_card_type)
         if not p_and_a:
-            # TODO: subpartition
-            # return utils.pass_action()
             return self.min_strategy(env)
         if 'Bomb' in p_and_a:
-            if utils.card_type_cmp(last_card_type, 'ThreePair') >= 0:
-                last_card_rank = env.last_card_rank()
-                assert last_card_rank
-                if utils.rank_cmp(last_card_rank, '10') > 0:
-                    return self.min_strategy(env, 'Bomb')
-        # return utils.pass_action()
-        return self.min_strategy(env)
+            last_card_rank = env.last_card_rank()
+            assert last_card_rank
+            if utils.rank_cmp(last_card_rank, '10') > 0:
+                return self.min_strategy(env, 'Bomb')
+        print('we pass, but min strategy is: ', utils.action_to_str(self.min_strategy(env)))
+        print('last card type and rank', env.last_card_type(), env.last_card_rank())
+        print('hand cards', env.hand_cards)
+        return utils.pass_action()
 
     def help_ally_strategy_without_priority(self, env):
         if not env.is_active(env.my_ally()):
