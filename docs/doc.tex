@@ -23,19 +23,21 @@
 \section{简介}
 我们完成了一个基于客户端-服务端架构的掼蛋AI系统。
 该系统的源代码和使用方法已上传到\texttt{github}的仓库上\cite{guandan-ai}。
-本文档主要描述系统的设计和实现。如果有其它任何疑惑，欢迎到项目主页进一步查阅。
+本文档主要描述系统的设计和实现。如果读者有其它任何疑惑，欢迎到项目主页进一步查阅。
 
 首先，我们简单介绍一下客户端和服务端的功能。
-想象一下我们自己在某个线上打牌系统打牌的时候，
-我们仅需考虑轮到我们出牌的时候出什么牌，而剩下的工作都交给软件去处理。
-这是一个很自然的过程。因此，我们的掼蛋AI系统也是这么设计的。
+想象一下，当我们自己在一些线上打牌系统打牌的时候，
+我们仅需考虑出牌的策略，并在轮到我们出牌的时候做出选择，而剩下的交互通讯工作都交给软件去处理。
+这是一个很自然的过程。因此，我们的掼蛋AI系统是模仿了这一理念而设计的。
 
-服务端和代表四个参与者的客户端进行通讯。
-服务端负责告诉客户端``你有什么牌''、``别人出了什么牌''、``轮到你出牌了''等等，
-并且把当前出牌的结果显示在GUI上。
-客户端只需要在接收到服务端的消息后回应自己出的牌。
-客户端出牌可以采用随机策略出牌，也可以采取智能的策略出牌，这取决于实现在客户端中AI算法的好坏。
-客户端和服务端的架构带来的好处是，我们的AI算法与其它系统部件解耦，使得实现更加可控可分工。
+我们的掼蛋AI系统采用客户端-服务端架构。
+服务端和代表四个参与者的客户端进行双向通讯。
+服务端负责告诉客户端``你有什么牌''、``别人出了什么牌''、``轮到你出牌了''等讯息，
+收集客户端的出牌选择，并把当前牌局的状态显示在GUI上。
+客户端只需要在接收到服务端的消息后回应自己打出的手牌。
+它可以采用随机策略出牌，也可以采取智能的策略出牌，这取决于实现在客户端中AI算法的好坏。
+
+客户端和服务端的架构带来的好处是，客户端采取的出牌策略与其它系统部件解耦，使得实现更加可控可分工。
 
 该系统的UI如图\ref{fig:ui}所示。
 图中有一个代表服务端的GUI和代表四个客户端的终端。
@@ -91,17 +93,17 @@
 \end{enumerate}
 
 通讯协议的更多内容可以查询服务端项目网站\cite{jsai}上的文档来获得，
-其它不必要的细节此处就不再赘述了。
+其它不必要的细节在此处就不再赘述了。
 
 \section{客户端} \label{sec:client}
 \subsection{设计}
 客户端的目标是完成与服务端通讯并在出牌阶段根据策略选择手牌打出。
-为了在实验的时候对比使用不同策略的客户端，
-我们需要把与服务器通讯的模块与策略模块解耦开来，减少代码的重复。
+因为在实验的时候我们要对比采用不同策略的客户端，所以为了减少代码的重复，
+我们需要把与不同客户端中共通的模块(如与服务器通讯的模块)与策略模块解耦开来。
 
 为了做到这一点，我们使用继承的机制。
 我们有一个基类客户端，被称为\texttt{BaseClient}，以及四个派生自基类的策略客户端，
-分别被称为\texttt{RandomClient}、\texttt{MinClient}、texttt{HumanClient}和\texttt{AIClient}。
+分别被称为\texttt{RandomClient}、\texttt{MinClient}、\texttt{HumanClient}和\texttt{AIClient}。
 
 \subsubsection{基类客户端}
 \texttt{BaseClient}首先完成与服务端的通讯功能。
@@ -119,8 +121,8 @@
 \texttt{BaseClient}会把消息中的字段保存进\texttt{env}变量中，然后调用\texttt{finish(env)}。
 当他人出牌消息到来后，\texttt{BaseClient}同样地会调用\texttt{others\_play(env)}。
 当自己出牌消息到来后，\texttt{BaseClient}会调用\texttt{my\_play(env)}。
-\texttt{my\_play(env)}必须返回一个手牌对象用来表示这轮你打出的手牌，
-然后\texttt{BaseClient}把结果封装成协议规定的格式送给服务端。
+\texttt{my\_play(env)}必须返回一个手牌对象用来表示这轮客户端打出的手牌，
+然后\texttt{BaseClient}把结果封装成协议规定的格式发送给服务端。
 
 \texttt{BaseClient}其次完成记忆功能。
 就像我们打牌时会记牌一样，它也会提取并记录所收到的消息中有用的信息，
@@ -144,9 +146,8 @@
 \end{enumerate}
 
 \subsection{AI算法} \label{subsec:ai-alg}
-目前，我们采用基于启发式策略的AI算法，其核心是自己出牌阶段的启发式规则。
-
-在自己出牌时，根据牌权是否在自己手中能划分出两种情况：
+目前，我们采用基于启发式规则的AI算法，其核心是客户端出牌阶段的启发式规则。
+在客户端出牌时，根据牌权是否在自己手中能划分出两种情况：
 \begin{enumerate}
   \item 牌权在自己。此时，按照优先级从高到低的顺序采取以下策略：
   \begin{enumerate}
@@ -221,140 +222,148 @@
 
 \subsection{实验环境}
 
-安装Microsoft Windows 10专业版和Python 3.7.6的PC，
+我们的实验环境是安装Microsoft Windows 10专业版和Python 3.7.6的PC，
 芯片配置为Intel$^\circledR$ Xeon$^\circledR$  CPU E5 1620 v4 @3.50GHz，
 共有64G内存。
 
 \subsection{实验设计}
 
 为了验证我们的AI算法的有效性和性能，我们将其分别量化为胜率和运行时间。
-我们规定一局（round）游戏是指一队玩家从等级2开始打到等级A并最终获得本轮胜利的过程。
-胜率（win rate）的定义如下：
+我们规定一局(round)游戏是指一队玩家从等级2开始打到等级A并最终获得本轮胜利的过程。
+胜率 (win rate)的定义如下：
 \[\mathrm{win\_rate} = \frac{\mathrm{round}_{\mathrm{win}}}{\mathrm{round}_{\mathrm{total}}}\]
-其中$\mathrm{round}_{\mathrm{win}}$是指某方玩家赢取胜利的局数，$\mathrm{round}_{\mathrm{total}}$是指总局数。
-运行时间（running time）是指某玩家在惯蛋游戏过程中，从服务器接收到可出牌集合的指令，
-到向服务器发送出牌指令之间的运行时间，单位为毫秒（ms）。
+其中$\mathrm{round}_{\mathrm{win}}$是指某方玩家赢取胜利的局数，
+$\mathrm{round}_{\mathrm{total}}$是指总局数。
+运行时间(running time)是指某玩家在惯蛋游戏过程中，
+从服务器接收到可出牌集合的指令，到向服务器发送出牌指令之间的运行时间，单位为毫秒(ms)。
 
 我们设计的三个研究问题分别为：
 \begin{itemize}
-	\item RQ1：我们设计的AI算法对于取得胜利的有效性如何？
-	\item RQ2：我们设计的AI算法中，多个启发式规则自身对有效性的贡献如何？
-	\item RQ3：我们设计的AI算法是否具有较为理想的运行时间开销？
+  \item RQ1：我们设计的AI算法对于取得胜利的有效性如何？
+  \item RQ2：我们设计的AI算法中，多个启发式规则自身对有效性的贡献如何？
+  \item RQ3：我们设计的AI算法是否具有较为理想的运行时间开销？
 \end{itemize}
 
-针对RQ1，我们设置了多个实验组，在100局游戏中（每局游戏随机发牌）分别测试了每一实验组中小队A的胜率，测试三次并取中位值，
-以此验证我们设计的AI算法对于取得胜利的有效性。
-实验组的配置如表\ref{RQ1_config}所示，\texttt{AI}是指基于\texttt{AIClient}出牌策略的玩家（也即我们实现的AI算法），
-\texttt{min}是指基于\texttt{MinClient}出牌策略的玩家，\texttt{random}是指基于\texttt{RandomClient}出牌策略的玩家。
+针对RQ1，我们设置了多个实验组，在100局游戏中(每局游戏随机发牌)分别测试了每一实验组中小队A的胜率，
+测试三次并取中位值，以此验证我们设计的AI算法对于取得胜利的有效性。
+实验组的配置如表\ref{RQ1_config}所示。
+\texttt{AI}是指基于\texttt{AIClient}出牌策略的玩家(也即我们实现的AI算法)，
+\texttt{min}是指基于\texttt{MinClient}出牌策略的玩家，
+\texttt{random}是指基于\texttt{RandomClient}出牌策略的玩家。
 
 \begin{table}
-	\centering 
-	\caption{RQ1的实验组配置}
-	\label{RQ1_config}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		实验组   & \multicolumn{2}{c|}{小队A} & \multicolumn{2}{c|}{小队B} \\ \hline
-		实验组1 & AI & random & random & random \\ \hline
-		实验组2 & AI & min & min & min \\ \hline
-		实验组3 & AI & AI & min & min \\ \hline
-	\end{tabular}
+  \centering 
+  \caption{RQ1的实验组配置}
+  \label{RQ1_config}
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    实验组  & \multicolumn{2}{c|}{小队A} & \multicolumn{2}{c|}{小队B} \\ \hline
+    实验组1 & AI & random & random & random \\ \hline
+    实验组2 & AI & min & min & min \\ \hline
+    实验组3 & AI & AI & min & min \\ \hline
+  \end{tabular}
 \end{table}
 
-针对RQ2，我们对比了完整的AI算法（记为AI-full）、仅采用了有牌权情形下的规则的AI算法（记为AI-act）、
-仅采用了无牌权情形下的规则的AI算法（记为AI-pass）、仅出可行出牌中最小牌（记为min）这四种算法的有效性，
-同样地配置多个实验组，用小队A的胜率衡量有效性，如表\ref{RQ2_config}所示。
-我们考虑到算法中存在与队友的配合策略，将小队A两个玩家都设置为相同的AI算法。
+针对RQ2，我们对比了完整的AI算法(记为AI-full)、
+仅采用了有牌权情形下的规则的AI算法(记为AI-act)、
+仅采用了无牌权情形下的规则的AI算法(记为AI-pass)、
+仅出可行出牌中最小牌(记为min)这四种算法的有效性。
+我们同样地配置多个实验组，用小队A的胜率衡量有效性，如表\ref{RQ2_config}所示。
+考虑到算法中存在与队友配合的策略，我们将小队A两个玩家都设置为相同的AI算法。
 
 \begin{table}
-	\centering 
-	\caption{RQ2的实验组配置}
-	\label{RQ2_config}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		实验组   & \multicolumn{2}{c|}{小队A} & \multicolumn{2}{c|}{小队B} \\ \hline
-		实验组1 & min & min & min & min \\ \hline
-		实验组2 & AI-act & AI-act & min & min \\ \hline
-		实验组3 & AI-pass & AI-pass & min & min \\ \hline
-		实验组4 & AI-full & AI-full & min & min \\ \hline
-	\end{tabular}
+  \centering 
+  \caption{RQ2的实验组配置}
+  \label{RQ2_config}
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    实验组  & \multicolumn{2}{c|}{小队A} & \multicolumn{2}{c|}{小队B} \\ \hline
+    实验组1 & min & min & min & min \\ \hline
+    实验组2 & AI-act & AI-act & min & min \\ \hline
+    实验组3 & AI-pass & AI-pass & min & min \\ \hline
+    实验组4 & AI-full & AI-full & min & min \\ \hline
+  \end{tabular}
 \end{table}
 
-针对RQ3，我们在10局游戏（小队A为\texttt{AI}和\texttt{min}；小队B为\texttt{AI}和\texttt{random}）
+针对RQ3，我们在10局游戏(小队A为\texttt{AI}和\texttt{min}；小队B为\texttt{AI}和\texttt{random})
 中分别测试了随机出牌、最小出牌和我们设计的AI算法的运行时间，对每次决策所用的时间取平均值，
 以此比较我们设计的AI算法与朴素的出牌策略时间开销的差异。
 
 \subsection{实验结果}
 
 \subsubsection{RQ1：有效性}
-
-实验结果见表\ref{RQ1_result}。我们可以看出基于AI算法的选手与一个基于随机出牌算法的选手组队，
+实验结果见表\ref{RQ1_result}。
+我们可以看出基于AI算法的选手与一个基于随机出牌算法的选手组队，
 对阵两名基于随机出牌算法的选手时，胜率相当大，为0.96。
 而当队友和对手的算法都替换为可以代表惯蛋新手的最小出牌算法时，胜率仍然较高，可以保证多数情况下胜出。
-若小队A由两名基于AI算法的选手组成，胜率则更高（由0.79提升至0.89），足见我们设计的AI算法对胜率的提升，
+若小队A由两名基于AI算法的选手组成，胜率则更高(由0.79提升至0.89)，足见我们设计的AI算法对胜率的提升，
 这在一定程度上验证了它的有效性。
 
 \begin{table}
-	\centering 
-	\caption{RQ1的实验结果}
-	\label{RQ1_result}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		\multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率\\ \hline
-		AI & random & random & random & 0.96 \\ \hline
-		AI & min & min & min & 0.79 \\ \hline
-		AI & AI & min & min & 0.89 \\ \hline
-	\end{tabular}
+  \centering 
+  \caption{RQ1的实验结果}
+  \label{RQ1_result}
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率\\ \hline
+    AI & random & random & random & 0.96 \\ \hline
+    AI & min & min & min & 0.79 \\ \hline
+    AI & AI & min & min & 0.89 \\ \hline
+  \end{tabular}
 \end{table}
 
 \subsubsection{RQ2：启发式规则的贡献}
-
-实验结果见表\ref{RQ2_result}。在第一组中，四位选手全都基于最小出牌算法，胜率0.54接近0.50，符合预期的实验结果（因实验次数有限故与期望值存在偏差）。
-对于仅采用了有牌权情形下的规则的AI算法，胜率猛增至0.84，而当仅采用无牌权情形下的规则时，
-胜率也有高于0.50的0.68，说明这两种规则都对胜率的提升（算法的有效性）有自己的贡献。
+实验结果见表\ref{RQ2_result}。
+在第一组中，四位选手全都基于最小出牌算法，
+胜率0.54接近0.50，符合预期的实验结果(因实验次数有限故与期望值存在偏差)。
+对于仅采用了有牌权情形下的规则的AI算法，胜率猛增至0.84，
+而当仅采用无牌权情形下的规则时，胜率也有高于0.50的0.68，
+说明这两种规则都对胜率的提升(算法的有效性)有自己的贡献。
 将两个规则结合起来，我们可以得到0.89的胜率，对最小出牌算法有很大的胜算。
 
 \begin{table}
-	\centering 
-	\caption{RQ2的实验结果}
-	\label{RQ2_result}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		\multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率 \\ \hline
-		min & min & min & min & 0.54 \\ \hline
-		AI-act  & AI-act & min & min & 0.84 \\ \hline
-		AI-pass & AI-pass & min & min & 0.68 \\ \hline
-		AI-full & AI-full & min & min & 0.89 \\ \hline
-	\end{tabular}
+  \centering 
+  \caption{RQ2的实验结果}
+  \label{RQ2_result}
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \multicolumn{2}{|c|}{小队A} & \multicolumn{2}{c|}{小队B} & 小队A的胜率 \\ \hline
+    min & min & min & min & 0.54 \\ \hline
+    AI-act  & AI-act & min & min & 0.84 \\ \hline
+    AI-pass & AI-pass & min & min & 0.68 \\ \hline
+    AI-full & AI-full & min & min & 0.89 \\ \hline
+  \end{tabular}
 \end{table}
-
-\begin{table}
-	\centering
-	\caption{RQ3的实验结果}
-	\label{RQ3_result}
-	\begin{tabular}{|c|c|c|}
-		\hline
-		算法 & 调用次数 & 平均运行时间（ms） \\ \hline
-		random & 3795 & 0.0082 \\ \hline
-		min & 3525 & 0.0076 \\ \hline
-		AI & 6836 & 0.0391 \\ \hline
-	\end{tabular}
-\end{table}
-
 
 \subsubsection{RQ3：运行时间}
-
-实验结果见表\ref{RQ3_result}。在10局比赛中，随机出牌算法、最小出牌算法和AI算法
-3795、3525和6836次（因有两个AI玩家故AI算法调用次数较多），
+实验结果见表\ref{RQ3_result}。
+在10局比赛中，随机出牌算法、最小出牌算法和AI算法分别调用了3795、3525和6836次
+(因有两个AI玩家故AI算法调用次数较多)，
 每次调用的平均运行时间分别为0.0082、0.0076和0.0391毫秒。
 由此可知AI算法的运行时间相比随机出牌算法和最小出牌算法分别增加了0.0309毫秒和0.0315毫秒，
 而因为后两者的运行时间相当短，故不会造成明显增加的时间开销，更不会影响用户体验，
-因此我们设计的AI算法有较为理想的时间开销。考虑到选手的对家和对手所采用的算法可能会影响当前的算法运行时间，因平均运行时间相当短，影响是有限的，故将这一讨论留给未来的工作。
+因此我们设计的AI算法有较为理想的时间开销。
+考虑到选手的对家和对手所采用的算法可能会影响当前的算法运行时间，
+因平均运行时间相当短，影响是有限的，故将这一讨论留给未来的工作。
+
+\begin{table}
+  \centering
+  \caption{RQ3的实验结果}
+  \label{RQ3_result}
+  \begin{tabular}{|c|c|c|}
+    \hline
+    算法 & 调用次数 & 平均运行时间（ms） \\ \hline
+    random & 3795 & 0.0082 \\ \hline
+    min & 3525 & 0.0076 \\ \hline
+    AI & 6836 & 0.0391 \\ \hline
+  \end{tabular}
+\end{table}
 
 \begin{thebibliography}{99}
   \bibitem{guandan-ai}
   \url{https://github.com/QinlinChen/guandan-ai}
-
   \bibitem{jsai}
   \url{http://www.jsai-gd.com/}
 \end{thebibliography}
+
 \end{document}
